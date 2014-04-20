@@ -1,6 +1,6 @@
-['question_like', 'user', 'question', 'question_follower', 'reply'].each do |file|
-  require_relative file
-end
+require_relative 'question'
+require_relative 'questions_db'
+require_relative 'user'
 
 class QuestionFollower
 

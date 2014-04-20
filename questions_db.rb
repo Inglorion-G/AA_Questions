@@ -2,10 +2,6 @@ require 'sqlite3'
 require 'singleton'
 require 'active_support/inflector'
 
-['question_like', 'user', 'question', 'question_follower', 'reply'].each do |file|
-  require_relative file
-end
-
 class QuestionsDatabase < SQLite3::Database
   include Singleton
 
@@ -33,10 +29,6 @@ class QuestionsDatabase < SQLite3::Database
   end
 
 end
-
-
-
-
 
 p u1 = User.find_by_id(4)
 p u1.instance_variables

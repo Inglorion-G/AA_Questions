@@ -1,27 +1,26 @@
-['question_like', 'user', 'question', 'question_follower', 'reply'].each do |file|
-  require_relative file
-end
+require_relative 'question'
+require_relative 'questions_db'
+require_relative 'question_follower'
 
+# class TableSaver
+#   def save
+# 
+#     p instance_values = self.instance_variables.map do |instance_variable|
+#       instance_variable.to_s
+#     end
+#     p questions = ("?"*instance_values.length).split(//).join(', ')
+# 
+#     p table_name = self.class.to_s.downcase.pluralize
+# 
+#     p column_names = instance_values.dup.map do |instance_value|
+#       instance_value.to_s[1,-1]
+#     end
+# 
+#     @id = QuestionsDatabase.last_insert_row_id
+#   end
+# end
 
-class TableSaver
-  def save
-
-    p instance_values = self.instance_variables.map do |instance_variable|
-      instance_variable.to_s
-    end
-    p questions = ("?"*instance_values.length).split(//).join(', ')
-
-    p table_name = self.class.to_s.downcase.pluralize
-
-    p column_names = instance_values.dup.map do |instance_value|
-      instance_value.to_s[1,-1]
-    end
-
-    @id = QuestionsDatabase.last_insert_row_id
-  end
-end
-
-class User < TableSaver
+class User
 
   def self.find_by_id(id)
     user_query = QuestionsDatabase.get_first_row(<<-SQL, id: id)
