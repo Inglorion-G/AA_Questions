@@ -17,61 +17,36 @@ class TableSaver
       instance_value.to_s[1,-1]
     end
 
-    # if @id.nil?
-    #   QuestionsDatabase.instance.execute(<<-SQL, #{*instance_values})
-    #   INSERT INTO
-    #   #{table_name}(#{*column_names})
-    #   VALUES
-    #   (#{questions})
-    #   SQL
-    # else
-    #   QuestionsDatabase.instance.execute(<<-SQL, @fname, @lname, @id)
-    #   UPDATE
-    #     users
-    #   SET
-    #     fname=?, lname=?
-    #   WHERE
-    #     id = ?
-    #   SQL
-    # end
     @id = QuestionsDatabase.instance.last_insert_row_id
   end
 end
 
-
-
 class User < TableSaver
 
   def self.find_by_id(id)
-    user_query = QuestionsDatabase.get_first_row(<<-SQL, id)
+    user_query = QuestionsDatabase.get_first_row(<<-SQL, id: id)
       SELECT 
         *
       FROM 
         users
       WHERE 
-        id = ?
+        users.id = :id
     SQL
     
     User.new(user_query)
   end
 
   def self.find_by_name(fname, lname)
-    query = QuestionsDatabase.instance.execute(<<-SQL, fname, lname)
-    SELECT *
-    FROM users
-    WHERE fname = ?
-    AND lname = ?
+    user_query = QuestionsDatabase.get_first_row(<<-SQL, fname: fname, lname: lname)
+      SELECT 
+        *
+      FROM 
+        users
+      WHERE 
+        users.fname = :fname AND users.lname = :lname
     SQL
 
-    User.new(query[0])
-  end
-
-  def authored_questions
-    Question.find_by_author_id(@id)
-  end
-
-  def authored_replies
-    Reply.find_by_user_id(@id)
+    User.new(user_query)
   end
 
   attr_accessor :id, :fname, :lname
@@ -80,6 +55,14 @@ class User < TableSaver
     @id = options["id"]
     @fname = options["fname"]
     @lname = options["lname"]
+  end
+  
+  def authored_questions
+    Question.find_by_author_id(@id)
+  end
+
+  def authored_replies
+    Reply.find_by_user_id(@id)
   end
 
   def liked_questions
@@ -91,18 +74,18 @@ class User < TableSaver
   end
 
   def average_karma
-    karma = QuestionsDatabase.instance.get_first_row(<<-SQL, @id)
-    SELECT COUNT(l.id) / CAST(COUNT(DISTINCT(q.id)) AS FLOAT)
-    FROM
-      questions q
-    LEFT OUTER JOIN
-      question_likes l
-    ON
-      q.id = l.question_id
-    WHERE
-      q.author_id = ?
+    karma = QuestionsDatabase.get_first_value(<<-SQL, author_id: @id)
+      SELECT 
+        COUNT(l.id) / CAST(COUNT(DISTINCT(q.id)) AS FLOAT)
+      FROM
+        questions q
+      LEFT OUTER JOIN
+        question_likes l
+      ON
+        q.id = l.question_id
+      WHERE
+        q.author_id = :author_id
     SQL
-    karma.values[0]
   end
 
 end
