@@ -3,25 +3,31 @@
 end
 
 class Question
-  attr_accessor :id, :title, :body, :author_id
+  
   def self.find_by_id(id)
-    query = QuestionsDatabase.instance.execute(<<-SQL, :id => id)
-    SELECT *
-    FROM questions
-    WHERE id = :id
-    SQL
+    question_query = QuestionsDatabase.get_first_row(<<-SQL, id: id)
+      SELECT 
+        *
+      FROM 
+        questions
+      WHERE 
+        id = :id
+      SQL
 
-    Question.new(query[0])
+    Question.new(question_query)
   end
 
   def self.find_by_author_id(author_id)
-    queries = QuestionsDatabase.instance.execute(<<-SQL, author_id)
-    SELECT *
-    FROM questions
-    WHERE author_id = ?
-    SQL
+    questions_query = QuestionsDatabase.execute(<<-SQL, author_id: author_id)
+      SELECT 
+        *
+      FROM 
+        questions
+      WHERE 
+        author_id = :author_id
+      SQL
 
-    queries.map{ |query| Question.new(query) }
+    questions_query.map{ |query| Question.new(query) }
   end
 
   def self.most_liked(n)
@@ -31,6 +37,8 @@ class Question
   def self.most_followed(n)
     QuestionFollower.most_followed_questions(n)
   end
+  
+  attr_accessor :id, :title, :body, :author_id
 
   def initialize(options = {})
     @id = options["id"]
@@ -48,16 +56,11 @@ class Question
   end
 
   def author
-    query = QuestionsDatabase.instance.execute(<<-SQL, @author_id)
-    SELECT *
-    FROM users
-    WHERE id = ?
-    SQL
-    User.new(query[0])
+    User.find_by_id(@author_id)
   end
 
   def replies
-      Reply.find_by_question_id(@id)
+    Reply.find_by_question_id(@id)
   end
 
   def followers

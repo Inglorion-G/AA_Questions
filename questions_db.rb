@@ -1,17 +1,35 @@
 require 'sqlite3'
 require 'singleton'
+require 'active_support/inflector'
+
 ['question_like', 'user', 'question', 'question_follower', 'reply'].each do |file|
   require_relative file
 end
-require 'active_support/inflector'
 
 class QuestionsDatabase < SQLite3::Database
   include Singleton
 
   def initialize
     super("questions.db")
+    
     self.results_as_hash = true
     self.type_translation = true
+  end
+  
+  def self.execute(*args)
+    self.instance.execute(*args)
+  end
+  
+  def self.get_first_row(*args)
+    self.instance.get_first_row(*args)
+  end
+  
+  def self.get_first_value(*args)
+    self.instance.get_first_value(*args)
+  end
+  
+  def self.last_insert_row_id
+    self.instance.last_insert_row_id
   end
 
 end
@@ -24,6 +42,7 @@ p u1 = User.find_by_id(4)
 p u1.instance_variables
  u1.id = nil
  u1.save
+ 
 # p User.find_by_id(3).authored_questions
 # p Question.find_by_author_id(3)[0].replies
 # p Reply.find_by_question_id(2)

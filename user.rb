@@ -42,15 +42,17 @@ end
 
 class User < TableSaver
 
-  attr_accessor :id, :fname, :lname
-
   def self.find_by_id(id)
-    query = QuestionsDatabase.instance.execute(<<-SQL, id)
-    SELECT *
-    FROM users
-    WHERE id = ?
+    user_query = QuestionsDatabase.get_first_row(<<-SQL, id)
+      SELECT 
+        *
+      FROM 
+        users
+      WHERE 
+        id = ?
     SQL
-    User.new(query[0])
+    
+    User.new(user_query)
   end
 
   def self.find_by_name(fname, lname)
@@ -71,6 +73,8 @@ class User < TableSaver
   def authored_replies
     Reply.find_by_user_id(@id)
   end
+
+  attr_accessor :id, :fname, :lname
 
   def initialize(options = {})
     @id = options["id"]
