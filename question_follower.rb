@@ -4,19 +4,6 @@ end
 
 class QuestionFollower
 
-  def self.find_by_id(id)
-    follower_query = QuestionsDatabase.get_first_row(<<-SQL, id: id)
-      SELECT 
-        *
-      FROM 
-        question_followers
-      WHERE 
-        id = :id
-    SQL
-
-    QuestionFollower.new(follower_query)
-  end
-
   def self.followers_for_question_id(question_id)
     user_queries = QuestionsDatabase.execute(<<-SQL, question_id: question_id)
       SELECT 
@@ -52,7 +39,7 @@ class QuestionFollower
   end
 
   def self.most_followed_questions(n)
-    question_queries = QuestionsDatabase.execute(<<-SQL, n: n)
+    question_queries = QuestionsDatabase.execute(<<-SQL, limit: n)
     SELECT 
       *
     FROM 
@@ -66,18 +53,11 @@ class QuestionFollower
         question_id
       ORDER BY
         -COUNT(follower_id)
-      LIMIT :n
+      LIMIT 
+        :limit
     )
     SQL
     question_queries.map { |query| Question.new(query) }
-  end
-
-  attr_accessor :id, :question_id, :follower_id
-
-  def initialize(options = {})
-    @id = options["id"]
-    @question_id = options["question_id"]
-    @follower_id = options["follower_id"]
   end
 
 end
