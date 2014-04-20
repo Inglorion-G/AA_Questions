@@ -3,77 +3,58 @@
 end
 
 class Reply
-  attr_accessor :id, :question_id, :parent_reply_id, :user_id, :body
   def self.find_by_id(id)
-    query = QuestionsDatabase.instance.execute(<<-SQL, :id => id)
-    SELECT *
-    FROM replies
-    WHERE id = :id
+    reply_query = QuestionsDatabase.get_first_row(<<-SQL, id: id)
+      SELECT 
+        *
+      FROM 
+        replies
+      WHERE 
+        replies.id = :id
     SQL
 
-    Reply.new(query[0])
+    Reply.new(reply_query)
   end
+  
+  def self.find_by_parent_id(parent_id)
+    reply_queries = QuestionsDatabase.execute(<<-SQL, parent_reply_id: parent_id)
+      SELECT
+        *
+      FROM
+        replies
+      WHERE
+        replies.parent_reply_id = :parent_reply_id
+    SQL
+    
+    reply_queries.map { |query| Reply.new(query) }
 
   def self.find_by_user_id(user_id)
-    queries = QuestionsDatabase.instance.execute(<<-SQL, user_id)
-    SELECT *
-    FROM replies
-    WHERE user_id = ?
+    reply_queries = QuestionsDatabase.execute(<<-SQL, user_id: user_id)
+      SELECT 
+        *
+      FROM 
+        replies
+      WHERE 
+        replies.user_id = :user_id
     SQL
 
-    queries.map{ |query| Reply.new(query) }
+    reply_queries.map{ |query| Reply.new(query) }
   end
 
-  def self.find_by_question_id(id)
-    queries = QuestionsDatabase.instance.execute(<<-SQL, id)
-    SELECT *
-    FROM replies
-    WHERE question_id = ?
+  def self.find_by_question_id(question_id)
+    reply_queries = QuestionsDatabase.execute(<<-SQL, question_id: question_id)
+      SELECT 
+        *
+      FROM 
+        replies
+      WHERE 
+        replies.question_id = :id
     SQL
 
-    queries.map { |query| Reply.new(query) }
+    reply_queries.map { |query| Reply.new(query) }
   end
-
-  def author
-    queries = QuestionsDatabase.instance.execute(<<-SQL, @user_id)
-    SELECT *
-    FROM users
-    WHERE id = ?
-    SQL
-
-    queries.map { |query| User.new(query) }
-  end
-
-  def question
-    queries = QuestionsDatabase.instance.execute(<<-SQL, @question_id)
-    SELECT *
-    FROM questions
-    WHERE id = ?
-    SQL
-
-    queries.map { |query| Question.new(query) }
-  end
-
-  def parent_reply
-    queries = QuestionsDatabase.instance.execute(<<-SQL, @parent_reply_id)
-    SELECT *
-    FROM replies
-    WHERE id = ?
-    SQL
-
-    queries.map { |query| Reply.new(query) }
-  end
-
-  def child_replies
-    queries = QuestionsDatabase.instance.execute(<<-SQL, @question_id)
-    SELECT *
-    FROM replies
-    WHERE question_id = ?
-    AND parent_reply_id IS NULL
-    SQL
-
-    queries.map { |query| Reply.new(query) }
-  end
+  
+  attr_accessor :id, :question_id, :parent_reply_id, :user_id, :body
 
   def initialize(options = {})
     @id = options["id"]
@@ -81,6 +62,22 @@ class Reply
     @parent_reply_id = options["parent_reply_id"]
     @user_id = options["user_id"]
     @body = options["body"]
+  end
+
+  def author
+    User.find_by_id(@user_id)
+  end
+
+  def question
+    Question.find_by_id(@question_id)
+  end
+
+  def parent_reply
+    Reply.find_by_parent_id(@parent_reply_id)
+  end
+
+  def child_replies
+    Reply.find_by_parent_id(@id)
   end
 
 end

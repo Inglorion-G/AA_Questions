@@ -17,7 +17,7 @@ class TableSaver
       instance_value.to_s[1,-1]
     end
 
-    @id = QuestionsDatabase.instance.last_insert_row_id
+    @id = QuestionsDatabase.last_insert_row_id
   end
 end
 
@@ -74,7 +74,7 @@ class User < TableSaver
   end
 
   def average_karma
-    karma = QuestionsDatabase.get_first_value(<<-SQL, author_id: @id)
+    QuestionsDatabase.get_first_value(<<-SQL, author_id: @id)
       SELECT 
         COUNT(l.id) / CAST(COUNT(DISTINCT(q.id)) AS FLOAT)
       FROM
